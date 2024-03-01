@@ -2,9 +2,9 @@
 #define SwitcherPin 3   // сигнал заднего дворника
 #define WiperPin 13   // управление задним дворником
 
-#define pump_interval 2000   // время непрерывной работы заднего дворника после омывания окна
+#define pump_interval 3000   // время непрерывной работы заднего дворника после омывания окна
 #define min_switcher_interval 2000   // минимальный интервал работы заднего дворника
-#define max_switcher_interval 30000   // максимальный интервал работы заднего дворника
+#define max_switcher_interval 20000   // максимальный интервал работы заднего дворника
 #define switcher_duration 100   // интервал включения питания заднего дворника
 long switcher_interval = 5000;   // дефолтный интервал работы заднего дворника
 
@@ -78,6 +78,7 @@ void loop() {
     wiper_state = 0;
     digitalWrite(WiperPin, wiper_state);   // подаем минус на дворник
     switcher_time = millis();   // запоминаем время отключения
+    protect_state = 0;   // отключаем защиту забытого включения
     Serial.println("                  off");
   }
 
