@@ -1,6 +1,6 @@
 #define PumpPin 2   // сигнал мотора заднего омывателя
 #define SwitcherPin 3   // сигнал заднего дворника
-#define WiperPin 13   // управление задним дворником
+#define WiperPin 4   // управление задним дворником
 
 #define pump_interval 3000   // время непрерывной работы заднего дворника после омывания окна
 #define min_switcher_interval 2000   // минимальный интервал работы заднего дворника
@@ -15,7 +15,7 @@ bool switcher_prev_state = 0, protect_state = 0;
 void setup() {
   Serial.begin(9600);
   Serial.println("Started!!!");
-  pinMode(WiperPin, OUTPUT);
+  pinMode(WiperPin, INPUT);  // по-умолчанию пин работает на вход, подтяжка на + отключает дворник
   digitalWrite(WiperPin, LOW);   // подаем минус на дворник
   pinMode(PumpPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(PumpPin), pump, LOW);   // отслеживание омывания
@@ -54,7 +54,7 @@ void loop() {
       on_time = millis();   // время текущего включения
       off_time = millis();   // время текущего отключения
       wiper_state = 1;
-      digitalWrite(WiperPin, wiper_state);   // подаем плюс на дворник
+      power(wiper_state);   // включаем дворник
       Serial.println("             on");
 
     }
@@ -64,9 +64,11 @@ void loop() {
     if (switcher_prev_state  && long(millis() - switcher_on_time) > switcher_duration) {   // выключен только что и работал в непрерывном режиме
       Serial.println("   __OFF");
       switcher_prev_state = 0;   // запомнили отключенное состояние
-      if (switcher_interval == 0)  switcher_time = millis();   // запоминаем время отключения
-      wiper_state = 0;
-      digitalWrite(WiperPin, wiper_state);   // подаем минус на дворник
+      if (switcher_interval == 0) {
+        switcher_time = millis();   // запоминаем время отключения
+        wiper_state = 0;
+        power(wiper_state);   // отключаем дворник
+      }
       switcher_on_time = millis();   // запомнили время выключения, чтобы не было дребезга
       on_time = millis() + switcher_duration;   // защита от дребезга выключения в непрерывном режиме
       protect_state = 0;   // отключаем защиту забытого включения
@@ -76,7 +78,7 @@ void loop() {
   if (long(millis() - off_time)  > switcher_duration && switcher_interval != 0 && wiper_state) {   // пора выключить дворник
     off_time = millis() + switcher_interval;   // // время следующего отключения
     wiper_state = 0;
-    digitalWrite(WiperPin, wiper_state);   // подаем минус на дворник
+    power(wiper_state);   // отключаем дворник
     switcher_time = millis();   // запоминаем время отключения
     protect_state = 0;   // отключаем защиту забытого включения
     Serial.println("                  off");
@@ -89,9 +91,19 @@ void pump() {
     pump_time = millis();   // задаем время омывания
 
     wiper_state = 1;
-    digitalWrite(WiperPin, wiper_state);   // подаем плюс на дворник
-    //on_time = millis() - switcher_interval + pump_interval;   // задаем время следующего включения дворника после задержки непрерывной работы после омывания
-    off_time = millis() + pump_interval;   // задаем задержку непрерывной работы дворника после омывания
+    power(wiper_state);   // включаем на дворник
+    on_time = millis() - switcher_interval + pump_interval;   // задаем время следующего включения дворника после задержки непрерывной работы после омывания
+    off_time = on_time + switcher_duration;   // задаем задержку непрерывной работы дворника после омывания
     Serial.println("on -->");
+  }
+}
+
+void power( bool pwr) {
+  digitalWrite(LED_BUILTIN, wiper_state);
+  if (pwr) {   // если надо включить дворник
+    pinMode(WiperPin, OUTPUT);
+    digitalWrite(WiperPin, LOW);   // подаем минус, включаем дворник
+  } else {   // если надо отключить дворник
+    pinMode(WiperPin, INPUT); // включаем пин на вход, подтяжка на + отключает дворник
   }
 }
