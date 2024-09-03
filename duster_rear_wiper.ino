@@ -16,8 +16,8 @@ bool switcher_prev_state = 0, protect_state = 0, wiper_state = 0;
 void setup() {
   Serial.begin(9600);
   Serial.println("Started!!!");
-  pinMode(WiperPin, INPUT);  // по-умолчанию пин управлением дворника работает на вход, подтяжка на (+) отключает дворник
-  pinMode(PumpPin, INPUT_PULLUP);  // пин омывателя
+  pinMode(WiperPin, INPUT);  // по-умолчанию пин управлением дворника работает на вход, выключая дворник
+  pinMode(PumpPin, INPUT);  // пин омывателя
   attachInterrupt(digitalPinToInterrupt(PumpPin), pump, CHANGE);   // отслеживание омывания
   pinMode(SwitcherPin, INPUT);  // пин переключателя дворников
   if (digitalRead(SwitcherPin)) {   // если дворник уже включен, то включаем защиту от забытого включения
@@ -113,7 +113,7 @@ void power() {
   digitalWrite(LED_BUILTIN, wiper_state);   // светодиод показывает состояние питания дворника
   if (wiper_state) {   // если надо включить дворник
     pinMode(WiperPin, OUTPUT);
-    digitalWrite(WiperPin, LOW);   // подаем минус, включаем дворник
+    digitalWrite(WiperPin, HIGH);   // подаем плюс, включаем дворник
   } else {   // если надо отключить дворник
     pinMode(WiperPin, INPUT); // включаем пин на вход, подтяжка на (+) отключает дворник
   }
